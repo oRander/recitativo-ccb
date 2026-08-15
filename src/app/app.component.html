@@ -18,31 +18,55 @@
     </div>
 
     <div class="grid">
-      <label>
-        <span>Livro</span>
-        <input [(ngModel)]="book" placeholder="Ex.: Salmos">
-      </label>
-      <label>
-        <span>Capítulo</span>
-        <input type="number" min="1" [(ngModel)]="chapter">
-      </label>
-      <label>
-        <span>Data do recitativo</span>
-        <input type="date" [(ngModel)]="recitativeDate">
-      </label>
-      <label>
-        <span>Auxiliar</span>
-        <input [(ngModel)]="assistant" placeholder="Nome da auxiliar">
-      </label>
-    </div>
+ <label>
+  <span>Livro</span>
 
-    <label class="full">
-      <span>Texto completo do capítulo</span>
-      <textarea [(ngModel)]="pastedText" rows="12" placeholder="1 Primeiro versículo...&#10;2 Segundo versículo..."></textarea>
-      <small>Coloque cada versículo em uma linha começando pelo número.</small>
-    </label>
+  <select
+    [(ngModel)]="selectedBookCode"
+    [disabled]="loadingBooks()"
+  >
+    <option
+      *ngFor="let item of books()"
+      [value]="item.code"
+    >
+      {{ item.name }}
+    </option>
+  </select>
+</label>
 
-    <button class="primary" type="button" (click)="parseVerses()">Separar versículos</button>
+  <label>
+    <span>Capítulo</span>
+    <input
+      type="number"
+      min="1"
+      [(ngModel)]="chapter"
+    >
+  </label>
+
+  <label>
+    <span>Data do recitativo</span>
+    <input
+      type="date"
+      [(ngModel)]="recitativeDate"
+    >
+  </label>
+
+  <label>
+    <span>Auxiliar</span>
+    <input
+      [(ngModel)]="assistant"
+      placeholder="Nome da auxiliar"
+    >
+  </label>
+</div>
+<button
+  class="primary"
+  type="button"
+  (click)="buscarCapitulo()"
+  [disabled]="loadingChapter() || loadingBooks()"
+>
+  {{ loadingChapter() ? 'Buscando...' : 'Buscar capítulo' }}
+</button>
   </section>
 
   <section class="panel">
