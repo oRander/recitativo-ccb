@@ -2,15 +2,25 @@
   <div>
     <span class="eyebrow">GERADOR DE CARTÕES</span>
     <h1>Recitativo</h1>
-    <p>Separe os versículos e gere as frentes e os versos prontos para impressão manual.</p>
+    <p>
+      Separe os versículos e gere as frentes e os versos prontos para impressão manual.
+    </p>
   </div>
+
   <div class="hero-mark">✦</div>
 </header>
 
 <main class="layout">
+
+  <!-- ========================= -->
+  <!-- 01 - DADOS DO RECITATIVO -->
+  <!-- ========================= -->
+
   <section class="panel form-panel">
+
     <div class="section-title">
       <span>01</span>
+
       <div>
         <h2>Dados do recitativo</h2>
         <p>Preencha os dados que aparecerão em todos os cartões.</p>
@@ -18,122 +28,256 @@
     </div>
 
     <div class="grid">
- <label>
-  <span>Livro</span>
 
-  <select
-    [(ngModel)]="selectedBookCode"
-    [disabled]="loadingBooks()"
-  >
-    <option
-      *ngFor="let item of books()"
-      [value]="item.code"
-    >
-      {{ item.name }}
-    </option>
-  </select>
-</label>
+      <!-- LIVRO -->
+      <label>
+        <span>Livro</span>
 
-  <label>
-    <span>Capítulo</span>
-    <input
-      type="number"
-      min="1"
-      [(ngModel)]="chapter"
-    >
-  </label>
+        <select
+          [(ngModel)]="selectedBookCode"
+          [disabled]="loadingBooks()"
+        >
+          <option
+            *ngFor="let item of books()"
+            [value]="item.code"
+          >
+            {{ item.name }}
+          </option>
+        </select>
+      </label>
 
-  <label>
-    <span>Data do recitativo</span>
-    <input
-      type="date"
-      [(ngModel)]="recitativeDate"
-    >
-  </label>
+      <!-- CAPÍTULO -->
+      <label>
+        <span>Capítulo</span>
 
-  <label>
-    <span>Auxiliar</span>
-    <input
-      [(ngModel)]="assistant"
-      placeholder="Nome da auxiliar"
+        <input
+          type="number"
+          min="1"
+          [(ngModel)]="chapter"
+        >
+      </label>
+
+      <!-- DATA -->
+      <label>
+        <span>Data do recitativo</span>
+
+        <input
+          type="date"
+          [(ngModel)]="recitativeDate"
+        >
+      </label>
+
+      <!-- AUXILIAR -->
+      <label>
+        <span>Auxiliar</span>
+
+        <input
+          [(ngModel)]="assistant"
+          placeholder="Nome da auxiliar"
+        >
+      </label>
+
+    </div>
+
+    <!-- BUSCAR -->
+    <button
+      class="primary"
+      type="button"
+      (click)="buscarCapitulo()"
+      [disabled]="loadingChapter() || loadingBooks()"
     >
-  </label>
-</div>
-<button
-  class="primary"
-  type="button"
-  (click)="buscarCapitulo()"
-  [disabled]="loadingChapter() || loadingBooks()"
->
-  {{ loadingChapter() ? 'Buscando...' : 'Buscar capítulo' }}
-</button>
+      {{ loadingChapter() ? 'Buscando...' : 'Buscar capítulo' }}
+    </button>
+
   </section>
 
+
+  <!-- ================= -->
+  <!-- 02 - CONFERÊNCIA -->
+  <!-- ================= -->
+
   <section class="panel">
+
     <div class="section-title">
       <span>02</span>
+
       <div>
         <h2>Conferência</h2>
         <p>Selecione os versículos e corrija o texto antes de gerar.</p>
       </div>
     </div>
 
-    <div class="toolbar" *ngIf="verses().length">
-      <strong>{{ selectedVerses().length }} de {{ verses().length }} selecionados</strong>
+    <div
+      class="toolbar"
+      *ngIf="verses().length"
+    >
+      <strong>
+        {{ selectedVerses().length }}
+        de
+        {{ verses().length }}
+        selecionados
+      </strong>
+
       <div>
-        <button class="ghost" type="button" (click)="selectAll(true)">Marcar todos</button>
-        <button class="ghost" type="button" (click)="selectAll(false)">Desmarcar</button>
+        <button
+          class="ghost"
+          type="button"
+          (click)="selectAll(true)"
+        >
+          Marcar todos
+        </button>
+
+        <button
+          class="ghost"
+          type="button"
+          (click)="selectAll(false)"
+        >
+          Desmarcar
+        </button>
       </div>
     </div>
 
-    <div class="verse-list" *ngIf="verses().length; else emptyState">
-      <article class="verse-item" *ngFor="let verse of verses()" [class.disabled]="!verse.selected">
+    <!-- LISTA DE VERSÍCULOS -->
+
+    <div
+      class="verse-list"
+      *ngIf="verses().length; else emptyState"
+    >
+      <article
+        class="verse-item"
+        *ngFor="let verse of verses()"
+        [class.disabled]="!verse.selected"
+      >
         <label class="check">
-          <input type="checkbox" [checked]="verse.selected" (change)="toggleVerse(verse.number)">
-          <span>{{ verse.number }}</span>
+          <input
+            type="checkbox"
+            [checked]="verse.selected"
+            (change)="toggleVerse(verse.number)"
+          >
+
+          <span>
+            {{ verse.number }}
+          </span>
         </label>
-        <textarea rows="3" [ngModel]="verse.text" (ngModelChange)="updateVerseText(verse.number, $event)"></textarea>
+
+        <textarea
+          rows="3"
+          [ngModel]="verse.text"
+          (ngModelChange)="updateVerseText(verse.number, $event)"
+        ></textarea>
       </article>
     </div>
 
+    <!-- QUANDO AINDA NÃO BUSCOU -->
+
     <ng-template #emptyState>
-      <div class="empty">Os versículos separados aparecerão aqui.</div>
+      <div class="empty">
+        Os versículos separados aparecerão aqui.
+      </div>
     </ng-template>
+
   </section>
 
+
+  <!-- ============== -->
+  <!-- 03 - IMPRESSÃO -->
+  <!-- ============== -->
+
   <section class="panel output-panel">
+
     <div class="section-title">
       <span>03</span>
+
       <div>
         <h2>Impressão</h2>
-        <p>Escolha como o verso será reposicionado quando a folha for virada.</p>
+
+        <p>
+          Escolha como o verso será reposicionado quando a folha for virada.
+        </p>
       </div>
     </div>
 
     <div class="print-options">
+
       <label>
         <span>Posição dos versos</span>
+
         <select [(ngModel)]="backMode">
-          <option value="mirror-horizontal">Espelhar horizontalmente</option>
-          <option value="mirror-vertical">Espelhar verticalmente</option>
-          <option value="rotate-180">Girar posições em 180°</option>
-          <option value="same">Manter as mesmas posições</option>
+          <option value="mirror-horizontal">
+            Espelhar horizontalmente
+          </option>
+
+          <option value="mirror-vertical">
+            Espelhar verticalmente
+          </option>
+
+          <option value="rotate-180">
+            Girar posições em 180°
+          </option>
+
+          <option value="same">
+            Manter as mesmas posições
+          </option>
         </select>
       </label>
+
       <div class="tip">
-        <strong>Dica para impressoras sem frente e verso</strong>
-        <p>Imprima primeiro as frentes, recoloque as folhas na bandeja e depois imprima o arquivo de versos. Faça um teste com uma folha antes.</p>
+        <strong>
+          Dica para impressoras sem frente e verso
+        </strong>
+
+        <p>
+          Imprima primeiro as frentes, recoloque as folhas na bandeja
+          e depois imprima o arquivo de versos. Faça um teste com uma
+          folha antes.
+        </p>
       </div>
+
     </div>
+
+    <!-- BOTÕES PDF -->
 
     <div class="actions">
-      <button class="secondary" type="button" (click)="generateFrontPdf()">Baixar frentes</button>
-      <button class="secondary" type="button" (click)="generateBackPdf()">Baixar versos</button>
-      <button class="primary" type="button" (click)="generateCompletePdf()">Baixar PDF completo</button>
+
+      <button
+        class="secondary"
+        type="button"
+        (click)="generateFrontPdf()"
+      >
+        Baixar frentes
+      </button>
+
+      <button
+        class="secondary"
+        type="button"
+        (click)="generateBackPdf()"
+      >
+        Baixar versos
+      </button>
+
+      <button
+        class="primary"
+        type="button"
+        (click)="generateCompletePdf()"
+      >
+        Baixar PDF completo
+      </button>
+
     </div>
 
-    <p class="error" *ngIf="error()">{{ error() }}</p>
+    <!-- ERRO -->
+
+    <p
+      class="error"
+      *ngIf="error()"
+    >
+      {{ error() }}
+    </p>
+
   </section>
+
 </main>
 
-<footer>Folha A4 • 10 cartões por página • cartão de 90 × 55 mm</footer>
+<footer>
+  Folha A4 • 10 cartões por página • cartão de 105 × 59,4 mm
+</footer>

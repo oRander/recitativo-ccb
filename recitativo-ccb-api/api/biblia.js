@@ -67,7 +67,6 @@ async function buscarCapitulo(livro, capitulo) {
   }
 
   const html = await response.text();
-
   const $ = cheerio.load(html);
 
   const versos = [];
@@ -147,7 +146,6 @@ async function buscarLivros() {
   }
 
   const html = await response.text();
-
   const $ = cheerio.load(html);
 
   const mapa = new Map();

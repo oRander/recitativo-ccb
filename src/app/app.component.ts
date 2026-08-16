@@ -31,20 +31,16 @@ export class AppComponent {
 
   book = 'Salmos';
   chapter = 23;
+
   books = signal<BibleBook[]>([]);
+
   selectedBookCode = '';
+
   loadingBooks = signal(false);
   loadingChapter = signal(false);
+
   recitativeDate = '';
   assistant = '';
-
-  pastedText =
-    `1 O Senhor é o meu pastor; nada me faltará.
-2 Deitar-me faz em verdes pastos, guia-me mansamente a águas tranquilas.
-3 Refrigera a minha alma; guia-me pelas veredas da justiça, por amor do seu nome.
-4 Ainda que eu andasse pelo vale da sombra da morte, não temeria mal algum, porque tu estás comigo; a tua vara e o teu cajado me consolam.
-5 Preparas uma mesa perante mim na presença dos meus inimigos; unges a minha cabeça com óleo, o meu cálice transborda.
-6 Certamente que a bondade e a misericórdia me seguirão todos os dias da minha vida; e habitarei na casa do Senhor por longos dias.`;
 
   backMode: BackMode = 'mirror-horizontal';
 
@@ -59,166 +55,146 @@ export class AppComponent {
     this.carregarLivros();
   }
 
-async carregarLivros(): Promise<void> {
-  this.loadingBooks.set(true);
-  this.error.set('');
-
-  try {
-    const response = await fetch(
-      'https://recitativo-ccb-api.vercel.app/api/biblia?acao=livros'
-    );
-
-    if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    this.books.set(data.livros ?? []);
-
-    if (this.books().length > 0) {
-      const genesis = this.books().find(
-        (item) => item.code === 'gen'
-      );
-
-      const initialBook = genesis ?? this.books()[0];
-
-      this.book = initialBook.name;
-      this.selectedBookCode = initialBook.code;
-      this.chapter = 1;
-    }
-
-  } catch (error) {
-    console.error('Erro ao carregar livros:', error);
-
-    this.error.set(
-      'Não foi possível carregar a lista de livros.'
-    );
-  } finally {
-    this.loadingBooks.set(false);
-  }
-}
-
-async buscarCapitulo(): Promise<void> {
-  this.error.set('');
-
-  if (!this.selectedBookCode) {
-    this.error.set('Selecione um livro.');
-    return;
-  }
-
-  if (!this.chapter || this.chapter < 1) {
-    this.error.set('Informe um capítulo válido.');
-    return;
-  }
-
-  this.loadingChapter.set(true);
-
-  try {
-    const url =
-      `https://recitativo-ccb-api.vercel.app/api/biblia` +
-      `?livro=${this.selectedBookCode}` +
-      `&capitulo=${this.chapter}`;
-
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (!data.versos || data.versos.length === 0) {
-      this.error.set('Nenhum versículo encontrado.');
-      return;
-    }
-
-    const versos: Verse[] = data.versos.map(
-      (verse: { number: number | string; text: string }) => ({
-        number: Number(verse.number),
-        text: verse.text,
-        selected: true
-      })
-    );
-
-    const selectedBook = this.books().find(
-      (item) => item.code === this.selectedBookCode
-    );
-
-    if (selectedBook) {
-      this.book = selectedBook.name;
-    }
-
-    this.verses.set(versos);
-
-  } catch (error) {
-    console.error('Erro ao buscar capítulo:', error);
-
-    this.error.set(
-      'Não foi possível buscar este capítulo.'
-    );
-  } finally {
-    this.loadingChapter.set(false);
-  }
-}
-
-  parseVerses(): void {
-
+  async carregarLivros(): Promise<void> {
+    this.loadingBooks.set(true);
     this.error.set('');
 
-    const normalized = this.pastedText
-      .replace(/\r/g, '')
-      .replace(/[ \t]+/g, ' ')
-      .trim();
-
-    if (!normalized) {
-
-      this.verses.set([]);
-
-      this.error.set(
-        'Cole o texto do capítulo para separar os versículos.'
+    try {
+      const response = await fetch(
+        'https://recitativo-ccb-api.vercel.app/api/biblia?acao=livros'
       );
 
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      this.books.set(data.livros ?? []);
+
+      if (this.books().length > 0) {
+        const salmos = this.books().find(
+          (item) => item.code === 'sal'
+        );
+
+        const initialBook =
+          salmos ?? this.books()[0];
+
+        this.book = initialBook.name;
+        this.selectedBookCode = initialBook.code;
+        this.chapter = 23;
+      }
+
+    } catch (error) {
+      console.error(
+        'Erro ao carregar livros:',
+        error
+      );
+
+      this.error.set(
+        'Não foi possível carregar a lista de livros.'
+      );
+
+    } finally {
+      this.loadingBooks.set(false);
+    }
+  }
+
+  async buscarCapitulo(): Promise<void> {
+    this.error.set('');
+
+    if (!this.selectedBookCode) {
+      this.error.set(
+        'Selecione um livro.'
+      );
       return;
     }
 
-    const pattern =
-      /(?:^|\n)\s*(\d{1,3})[.º°:\-]?\s+([\s\S]*?)(?=(?:\n\s*\d{1,3}[.º°:\-]?\s+)|$)/g;
-
-    const parsed: Verse[] = [];
-
-    let match: RegExpExecArray | null;
-
-    while (
-      (match = pattern.exec(normalized)) !== null
-    ) {
-
-      parsed.push({
-        number: Number(match[1]),
-        text: match[2]
-          .replace(/\n+/g, ' ')
-          .trim(),
-        selected: true
-      });
-
-    }
-
-    if (parsed.length === 0) {
-
+    if (!this.chapter || this.chapter < 1) {
       this.error.set(
-        'Não consegui identificar os versículos. Coloque cada verso em uma linha iniciada pelo número, por exemplo: “1 No princípio...”.'
+        'Informe um capítulo válido.'
       );
-
-      this.verses.set([]);
-
       return;
     }
 
-    this.verses.set(parsed);
+    this.loadingChapter.set(true);
+
+    try {
+      const url =
+        `https://recitativo-ccb-api.vercel.app/api/biblia` +
+        `?livro=${this.selectedBookCode}` +
+        `&capitulo=${this.chapter}`;
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          this.error.set(
+            'Capítulo não encontrado.'
+          );
+          return;
+        }
+
+        throw new Error(
+          `Erro HTTP: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (
+        !data.versos ||
+        data.versos.length === 0
+      ) {
+        this.error.set(
+          'Nenhum versículo encontrado.'
+        );
+        return;
+      }
+
+      const versos: Verse[] =
+        data.versos.map(
+          (
+            verse: {
+              number: number | string;
+              text: string;
+            }
+          ) => ({
+            number: Number(verse.number),
+            text: verse.text,
+            selected: true
+          })
+        );
+
+      const selectedBook =
+        this.books().find(
+          (item) =>
+            item.code ===
+            this.selectedBookCode
+        );
+
+      if (selectedBook) {
+        this.book = selectedBook.name;
+      }
+
+      this.verses.set(versos);
+
+    } catch (error) {
+      console.error(
+        'Erro ao buscar capítulo:',
+        error
+      );
+
+      this.error.set(
+        'Não foi possível buscar este capítulo.'
+      );
+
+    } finally {
+      this.loadingChapter.set(false);
+    }
   }
 
   toggleVerse(number: number): void {
-
     this.verses.update((items) =>
       items.map((item) =>
         item.number === number
@@ -229,25 +205,21 @@ async buscarCapitulo(): Promise<void> {
           : item
       )
     );
-
   }
 
   selectAll(value: boolean): void {
-
     this.verses.update((items) =>
       items.map((item) => ({
         ...item,
         selected: value
       }))
     );
-
   }
 
   updateVerseText(
     number: number,
     text: string
   ): void {
-
     this.verses.update((items) =>
       items.map((item) =>
         item.number === number
@@ -258,11 +230,9 @@ async buscarCapitulo(): Promise<void> {
           : item
       )
     );
-
   }
 
   generateFrontPdf(): void {
-
     if (!this.validate()) {
       return;
     }
@@ -277,11 +247,9 @@ async buscarCapitulo(): Promise<void> {
     pdf.save(
       this.fileName('frentes')
     );
-
   }
 
   generateBackPdf(): void {
-
     if (!this.validate()) {
       return;
     }
@@ -296,11 +264,9 @@ async buscarCapitulo(): Promise<void> {
     pdf.save(
       this.fileName('versos')
     );
-
   }
 
   generateCompletePdf(): void {
-
     if (!this.validate()) {
       return;
     }
@@ -323,11 +289,9 @@ async buscarCapitulo(): Promise<void> {
     pdf.save(
       this.fileName('completo')
     );
-
   }
 
   private validate(): boolean {
-
     this.error.set('');
 
     if (
@@ -336,7 +300,6 @@ async buscarCapitulo(): Promise<void> {
       !this.recitativeDate ||
       !this.assistant.trim()
     ) {
-
       this.error.set(
         'Preencha livro, capítulo, data e auxiliar.'
       );
@@ -347,7 +310,6 @@ async buscarCapitulo(): Promise<void> {
     if (
       this.selectedVerses().length === 0
     ) {
-
       this.error.set(
         'Selecione pelo menos um versículo.'
       );
@@ -359,13 +321,11 @@ async buscarCapitulo(): Promise<void> {
   }
 
   private createPdf(): jsPDF {
-
     return new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: 'a4'
     });
-
   }
 
   private drawPages(
@@ -389,14 +349,11 @@ async buscarCapitulo(): Promise<void> {
       pageIndex < totalPages;
       pageIndex++
     ) {
-
       if (
         pageIndex > 0 ||
         !keepFirstPage
       ) {
-
         pdf.addPage();
-
       }
 
       const pageItems =
@@ -416,47 +373,52 @@ async buscarCapitulo(): Promise<void> {
           const { x, y } =
             this.positionFor(position);
 
-          if (
-            side === 'front'
-          ) {
-
+          if (side === 'front') {
             this.drawFront(
               pdf,
               x,
               y,
               verse
             );
-
           } else {
-
             this.drawBack(
               pdf,
               x,
               y,
               verse
             );
-
           }
-
         }
       );
-
     }
-
   }
 
-  private positionFor(index: number): { x: number; y: number } {
-  const cardWidth = 105;
-  const cardHeight = 59.4;
+  private positionFor(
+    index: number
+  ): {
+    x: number;
+    y: number;
+  } {
 
-  const column = index % 2;
-  const row = Math.floor(index / 2);
+    const cardWidth = 105;
+    const cardHeight = 59.4;
 
-  return {
-    x: column * cardWidth,
-    y: row * cardHeight
-  };
-}
+    const column =
+      index % 2;
+
+    const row =
+      Math.floor(index / 2);
+
+    return {
+      x:
+        column *
+        cardWidth,
+
+      y:
+        row *
+        cardHeight
+    };
+  }
 
   private mapBackPosition(
     index: number
@@ -468,9 +430,7 @@ async buscarCapitulo(): Promise<void> {
     const column =
       index % 2;
 
-    switch (
-      this.backMode
-    ) {
+    switch (this.backMode) {
 
       case 'mirror-horizontal':
         return (
@@ -492,346 +452,428 @@ async buscarCapitulo(): Promise<void> {
 
       case 'same':
         return index;
-
     }
-
   }
 
- private drawFront(
-  pdf: jsPDF,
-  x: number,
-  y: number,
-  verse: Verse
-): void {
-
-  const width = 105;
-  const height = 59.4;
-
-  // Linhas de divisão / corte
-  pdf.setDrawColor(210, 210, 210);
-  pdf.setLineWidth(0.3);
-
-  pdf.line(x + width, y, x + width, y + height);
-  pdf.line(x, y + height, x + width, y + height);
-
-  // Título
-  pdf.setTextColor(20, 20, 20);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(9.5);
-
-  pdf.text(
-    'CONGREGAÇÃO CRISTÃ NO BRASIL',
-    x + width / 2,
-    y + 7,
-    { align: 'center' }
-  );
-
-  pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(8);
-
-  const left = x + 3;
-  const right = x + width - 4;
-
-  // NOME
-  pdf.text('NOME:', left, y + 15);
-  pdf.line(left + 12, y + 15.7, right, y + 15.7);
-
-  // LIVRO
-  pdf.text('LIVRO:', left, y + 22);
-
-  pdf.line(
-    left + 12,
-    y + 22.7,
-    right,
-    y + 22.7
-  );
-
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(
-    this.book,
-    left + 14,
-    y + 22
-  );
-
-  // CAPÍTULO / VERSOS / AO
-  pdf.setFont('helvetica', 'normal');
-
-  pdf.text(
-    'CAPÍTULO:',
-    left,
-    y + 29
-  );
-
-  pdf.line(
-    left + 18,
-    y + 29.7,
-    left + 34,
-    y + 29.7
-  );
-
-  pdf.setFont('helvetica', 'bold');
-
-  pdf.text(
-    String(this.chapter),
-    left + 20,
-    y + 29
-  );
-
-  pdf.setFont('helvetica', 'normal');
-
-  pdf.text(
-    'VERSOS:',
-    left + 35,
-    y + 29
-  );
-
-  pdf.line(
-    left + 50,
-    y + 29.7,
-    left + 67,
-    y + 29.7
-  );
-
-  pdf.setFont('helvetica', 'bold');
-
-  pdf.text(
-    String(verse.number),
-    left + 52,
-    y + 29
-  );
-
-  pdf.setFont('helvetica', 'normal');
-
-  pdf.text(
-    'AO',
-    left + 68,
-    y + 29
-  );
-
-  pdf.line(
-    left + 74,
-    y + 29.7,
-    right,
-    y + 29.7
-  );
-
-  pdf.setFont('helvetica', 'bold');
-
-  pdf.text(
-    String(verse.number),
-    left + 76,
-    y + 29
-  );
-
-  // APÓS
-  pdf.setFont('helvetica', 'normal');
-
-  pdf.text(
-    'APÓS:',
-    left,
-    y + 36
-  );
-
-  pdf.line(
-    left + 12,
-    y + 36.7,
-    right,
-    y + 36.7
-  );
-
-  // DATA
-  pdf.text(
-    'RECITATIVO PARA O DIA:',
-    left,
-    y + 43
-  );
-
-  pdf.line(
-    left + 43,
-    y + 43.7,
-    right,
-    y + 43.7
-  );
-
-  pdf.setFont('helvetica', 'bold');
-
-  pdf.text(
-    this.formatDate(this.recitativeDate),
-    left + 46,
-    y + 43
-  );
-
-  // AUXILIAR
-  pdf.setFont('helvetica', 'normal');
-
-  pdf.text(
-    'AUXILIAR:',
-    left,
-    y + 50
-  );
-
-  pdf.line(
-    left + 17,
-    y + 50.7,
-    right,
-    y + 50.7
-  );
-
-  pdf.setFont('helvetica', 'bold');
-
-  pdf.text(
-    this.assistant,
-    left + 19,
-    y + 50
-  );
-}
-
-private drawBack(
-  pdf: jsPDF,
-  x: number,
-  y: number,
-  verse: Verse
-): void {
-
-  const width = 105;
-  const height = 59.4;
-
-  // Linhas de divisão / corte
-  pdf.setDrawColor(210, 210, 210);
-  pdf.setLineWidth(0.3);
-
-  pdf.line(
-    x + width,
-    y,
-    x + width,
-    y + height
-  );
-
-  pdf.line(
-    x,
-    y + height,
-    x + width,
-    y + height
-  );
-
-  // Referência do versículo
-  pdf.setTextColor(20, 20, 20);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(9.5);
-
-  pdf.text(
-    `${this.book.toUpperCase()} ${this.chapter}:${verse.number}`,
-    x + width / 2,
-    y + 8,
-    {
-      align: 'center'
-    }
-  );
-
-  // Texto do versículo
-  pdf.setFont('times', 'normal');
-  pdf.setTextColor(20, 20, 20);
-
-  const availableWidth = width - 14;
-
-  const fontSize =
-    verse.text.length > 350
-      ? 7
-      : verse.text.length > 260
-        ? 7.5
-        : verse.text.length > 180
-          ? 8
-          : verse.text.length > 110
-            ? 8.8
-            : 9.5;
-
-  pdf.setFontSize(fontSize);
-
-  const lines = pdf.splitTextToSize(
-    verse.text,
-    availableWidth
-  ) as string[];
-
-  const lineHeight =
-    fontSize * 0.42;
-
-  const blockHeight =
-    lines.length * lineHeight;
-
-  const contentTop = y + 13;
-  const contentBottom = y + height - 5;
-
-  const availableHeight =
-    contentBottom - contentTop;
-
-  let startY =
-    contentTop +
-    (availableHeight - blockHeight) / 2;
-
-  if (startY < contentTop) {
-    startY = contentTop;
-  }
-
-  pdf.text(
-    lines,
-    x + width / 2,
-    startY,
-    {
-      align: 'center',
-      lineHeightFactor: 1.25,
-      maxWidth: availableWidth
-    }
-  );
-}
-
-  private field(
+  private drawFront(
     pdf: jsPDF,
     x: number,
     y: number,
-    label: string,
-    value: string,
-    lineWidth: number
+    verse: Verse
   ): void {
+
+    const width = 105;
+    const height = 59.4;
+
+    // Linhas de divisão / corte
+    pdf.setDrawColor(
+      210,
+      210,
+      210
+    );
+
+    pdf.setLineWidth(
+      0.3
+    );
+
+    pdf.line(
+      x + width,
+      y,
+      x + width,
+      y + height
+    );
+
+    pdf.line(
+      x,
+      y + height,
+      x + width,
+      y + height
+    );
+
+    // Título
+    pdf.setTextColor(
+      20,
+      20,
+      20
+    );
+
+    pdf.setFont(
+      'helvetica',
+      'bold'
+    );
+
+    pdf.setFontSize(
+      9.5
+    );
+
+    pdf.text(
+      'CONGREGAÇÃO CRISTÃ NO BRASIL',
+      x + width / 2,
+      y + 7,
+      {
+        align: 'center'
+      }
+    );
 
     pdf.setFont(
       'helvetica',
       'normal'
     );
 
-    pdf.text(
-      label,
-      x,
-      y
+    pdf.setFontSize(
+      8
     );
 
-    const labelWidth =
-      pdf.getTextWidth(label) +
-      2;
+    const left =
+      x + 3;
+
+    const right =
+      x + width - 4;
+
+    // NOME
+    pdf.text(
+      'NOME:',
+      left,
+      y + 15
+    );
 
     pdf.line(
-      x + labelWidth,
-      y + 0.8,
-      x + lineWidth,
-      y + 0.8
+      left + 12,
+      y + 15.7,
+      right,
+      y + 15.7
     );
 
-    if (value) {
+    // LIVRO
+    pdf.text(
+      'LIVRO:',
+      left,
+      y + 22
+    );
 
-      pdf.setFont(
-        'helvetica',
-        'bold'
-      );
+    pdf.line(
+      left + 12,
+      y + 22.7,
+      right,
+      y + 22.7
+    );
 
-      pdf.text(
-        value,
-        x +
-          labelWidth +
-          1,
-        y
-      );
+    pdf.setFont(
+      'helvetica',
+      'bold'
+    );
 
+    pdf.text(
+      this.book,
+      left + 14,
+      y + 22
+    );
+
+    // CAPÍTULO
+    pdf.setFont(
+      'helvetica',
+      'normal'
+    );
+
+    pdf.text(
+      'CAPÍTULO:',
+      left,
+      y + 29
+    );
+
+    pdf.line(
+      left + 18,
+      y + 29.7,
+      left + 34,
+      y + 29.7
+    );
+
+    pdf.setFont(
+      'helvetica',
+      'bold'
+    );
+
+    pdf.text(
+      String(this.chapter),
+      left + 20,
+      y + 29
+    );
+
+    // VERSOS
+    pdf.setFont(
+      'helvetica',
+      'normal'
+    );
+
+    pdf.text(
+      'VERSOS:',
+      left + 35,
+      y + 29
+    );
+
+    pdf.line(
+      left + 50,
+      y + 29.7,
+      left + 67,
+      y + 29.7
+    );
+
+    pdf.setFont(
+      'helvetica',
+      'bold'
+    );
+
+    pdf.text(
+      String(verse.number),
+      left + 52,
+      y + 29
+    );
+
+    // AO
+    pdf.setFont(
+      'helvetica',
+      'normal'
+    );
+
+    pdf.text(
+      'AO',
+      left + 68,
+      y + 29
+    );
+
+    pdf.line(
+      left + 74,
+      y + 29.7,
+      right,
+      y + 29.7
+    );
+
+    pdf.setFont(
+      'helvetica',
+      'bold'
+    );
+
+    pdf.text(
+      String(verse.number),
+      left + 76,
+      y + 29
+    );
+
+    // APÓS
+    pdf.setFont(
+      'helvetica',
+      'normal'
+    );
+
+    pdf.text(
+      'APÓS:',
+      left,
+      y + 36
+    );
+
+    pdf.line(
+      left + 12,
+      y + 36.7,
+      right,
+      y + 36.7
+    );
+
+    // DATA
+    pdf.text(
+      'RECITATIVO PARA O DIA:',
+      left,
+      y + 43
+    );
+
+    pdf.line(
+      left + 43,
+      y + 43.7,
+      right,
+      y + 43.7
+    );
+
+    pdf.setFont(
+      'helvetica',
+      'bold'
+    );
+
+    pdf.text(
+      this.formatDate(
+        this.recitativeDate
+      ),
+      left + 46,
+      y + 43
+    );
+
+    // AUXILIAR
+    pdf.setFont(
+      'helvetica',
+      'normal'
+    );
+
+    pdf.text(
+      'AUXILIAR:',
+      left,
+      y + 50
+    );
+
+    pdf.line(
+      left + 17,
+      y + 50.7,
+      right,
+      y + 50.7
+    );
+
+    pdf.setFont(
+      'helvetica',
+      'bold'
+    );
+
+    pdf.text(
+      this.assistant,
+      left + 19,
+      y + 50
+    );
+  }
+
+  private drawBack(
+    pdf: jsPDF,
+    x: number,
+    y: number,
+    verse: Verse
+  ): void {
+
+    const width = 105;
+    const height = 59.4;
+
+    // Linhas de divisão / corte
+    pdf.setDrawColor(
+      210,
+      210,
+      210
+    );
+
+    pdf.setLineWidth(
+      0.3
+    );
+
+    pdf.line(
+      x + width,
+      y,
+      x + width,
+      y + height
+    );
+
+    pdf.line(
+      x,
+      y + height,
+      x + width,
+      y + height
+    );
+
+    // Referência
+    pdf.setTextColor(
+      20,
+      20,
+      20
+    );
+
+    pdf.setFont(
+      'helvetica',
+      'bold'
+    );
+
+    pdf.setFontSize(
+      9.5
+    );
+
+    pdf.text(
+      `${this.book.toUpperCase()} ${this.chapter}:${verse.number}`,
+      x + width / 2,
+      y + 8,
+      {
+        align: 'center'
+      }
+    );
+
+    // Texto
+    pdf.setFont(
+      'times',
+      'normal'
+    );
+
+    pdf.setTextColor(
+      20,
+      20,
+      20
+    );
+
+    const availableWidth =
+      width - 14;
+
+    const fontSize =
+      verse.text.length > 350
+        ? 7
+        : verse.text.length > 260
+          ? 7.5
+          : verse.text.length > 180
+            ? 8
+            : verse.text.length > 110
+              ? 8.8
+              : 9.5;
+
+    pdf.setFontSize(
+      fontSize
+    );
+
+    const lines =
+      pdf.splitTextToSize(
+        verse.text,
+        availableWidth
+      ) as string[];
+
+    const lineHeight =
+      fontSize * 0.42;
+
+    const blockHeight =
+      lines.length *
+      lineHeight;
+
+    const contentTop =
+      y + 13;
+
+    const contentBottom =
+      y + height - 5;
+
+    const availableHeight =
+      contentBottom -
+      contentTop;
+
+    let startY =
+      contentTop +
+      (
+        availableHeight -
+        blockHeight
+      ) / 2;
+
+    if (
+      startY <
+      contentTop
+    ) {
+      startY =
+        contentTop;
     }
 
+    pdf.text(
+      lines,
+      x + width / 2,
+      startY,
+      {
+        align: 'center',
+        lineHeightFactor: 1.25,
+        maxWidth: availableWidth
+      }
+    );
   }
 
   private formatDate(
@@ -867,5 +909,4 @@ private drawBack(
 
     return `recitativo-${safeBook}-${this.chapter}-${suffix}.pdf`;
   }
-
 }
