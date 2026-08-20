@@ -820,146 +820,163 @@ export class AppComponent {
     );
   }
 
-  private drawBack(
-    pdf: jsPDF,
-    x: number,
-    y: number,
-    verse: Verse
-  ): void {
+ private drawBack(
+  pdf: jsPDF,
+  x: number,
+  y: number,
+  verse: Verse
+): void {
 
-    const width = 105;
-    const height = 59.4;
+  const width = 105;
+  const height = 59.4;
 
-    // Linhas de divisão / corte
-    pdf.setDrawColor(
-      210,
-      210,
-      210
-    );
+  // ==========================
+  // LINHAS DE DIVISÃO / CORTE
+  // ==========================
 
-    pdf.setLineWidth(
-      0.3
-    );
+  pdf.setDrawColor(
+    210,
+    210,
+    210
+  );
 
-    pdf.line(
-      x + width,
-      y,
-      x + width,
-      y + height
-    );
+  pdf.setLineWidth(0.3);
 
-    pdf.line(
-      x,
-      y + height,
-      x + width,
-      y + height
-    );
+  pdf.line(
+    x + width,
+    y,
+    x + width,
+    y + height
+  );
 
-    // Referência
-    pdf.setTextColor(
-      20,
-      20,
-      20
-    );
+  pdf.line(
+    x,
+    y + height,
+    x + width,
+    y + height
+  );
 
-    pdf.setFont(
-      'helvetica',
-      'bold'
-    );
+  // ==========================
+  // REFERÊNCIA
+  // ==========================
 
-    pdf.setFontSize(
-      9.5
-    );
+  pdf.setTextColor(
+    20,
+    20,
+    20
+  );
 
-    pdf.text(
-      `${this.book.toUpperCase()} ${this.chapter}:${verse.number}`,
-      x + width / 2,
-      y + 8,
-      {
-        align: 'center'
-      }
-    );
+  pdf.setFont(
+    'helvetica',
+    'bold'
+  );
 
-    // Texto
-    pdf.setFont(
-      'times',
-      'normal'
-    );
+  pdf.setFontSize(11);
 
-    pdf.setTextColor(
-      20,
-      20,
-      20
-    );
-
-    const availableWidth =
-      width - 14;
-
-    const fontSize =
-      verse.text.length > 350
-        ? 7
-        : verse.text.length > 260
-          ? 7.5
-          : verse.text.length > 180
-            ? 8
-            : verse.text.length > 110
-              ? 8.8
-              : 9.5;
-
-    pdf.setFontSize(
-      fontSize
-    );
-
-    const lines =
-      pdf.splitTextToSize(
-        verse.text,
-        availableWidth
-      ) as string[];
-
-    const lineHeight =
-      fontSize * 0.42;
-
-    const blockHeight =
-      lines.length *
-      lineHeight;
-
-    const contentTop =
-      y + 13;
-
-    const contentBottom =
-      y + height - 5;
-
-    const availableHeight =
-      contentBottom -
-      contentTop;
-
-    let startY =
-      contentTop +
-      (
-        availableHeight -
-        blockHeight
-      ) / 2;
-
-    if (
-      startY <
-      contentTop
-    ) {
-      startY =
-        contentTop;
+  pdf.text(
+    `${this.book.toUpperCase()} ${this.chapter}:${verse.number}`,
+    x + width / 2,
+    y + 8,
+    {
+      align: 'center'
     }
+  );
 
-    pdf.text(
-      lines,
-      x + width / 2,
-      startY,
-      {
-        align: 'center',
-        lineHeightFactor: 1.25,
-        maxWidth: availableWidth
-      }
-    );
+  // ==========================
+  // TEXTO DO VERSÍCULO
+  // ==========================
+
+  pdf.setFont(
+    'times',
+    'normal'
+  );
+
+  pdf.setTextColor(
+    20,
+    20,
+    20
+  );
+
+  const availableWidth =
+    width - 14;
+
+  /*
+   * Fonte dinâmica.
+   *
+   * Versículos pequenos ficam GRANDES.
+   * Conforme o texto aumenta, a fonte diminui
+   * para continuar cabendo no cartão.
+   */
+  const fontSize =
+    verse.text.length > 400
+      ? 8
+      : verse.text.length > 320
+        ? 9
+        : verse.text.length > 250
+          ? 10
+          : verse.text.length > 180
+            ? 11
+            : verse.text.length > 120
+              ? 12
+              : verse.text.length > 70
+                ? 13
+                : 14;
+
+  pdf.setFontSize(
+    fontSize
+  );
+
+  const lines =
+    pdf.splitTextToSize(
+      verse.text,
+      availableWidth
+    ) as string[];
+
+  const lineHeight =
+    fontSize * 0.42;
+
+  const blockHeight =
+    lines.length *
+    lineHeight;
+
+  // Espaço reservado abaixo do título
+  const contentTop =
+    y + 14;
+
+  const contentBottom =
+    y + height - 5;
+
+  const availableHeight =
+    contentBottom -
+    contentTop;
+
+  // Centraliza verticalmente o versículo
+  let startY =
+    contentTop +
+    (
+      availableHeight -
+      blockHeight
+    ) / 2;
+
+  if (
+    startY <
+    contentTop
+  ) {
+    startY =
+      contentTop;
   }
 
+  pdf.text(
+    lines,
+    x + width / 2,
+    startY,
+    {
+      align: 'center',
+      lineHeightFactor: 1.25,
+      maxWidth: availableWidth
+    }
+  );
+}
   private formatDate(
     value: string
   ): string {
