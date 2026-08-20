@@ -465,7 +465,10 @@ export class AppComponent {
     const width = 105;
     const height = 59.4;
 
-    // Linhas de divisão / corte
+    // ==========================
+    // LINHAS DE DIVISÃO / CORTE
+    // ==========================
+
     pdf.setDrawColor(
       210,
       210,
@@ -490,7 +493,10 @@ export class AppComponent {
       y + height
     );
 
-    // Título
+    // ==========================
+    // TÍTULO
+    // ==========================
+
     pdf.setTextColor(
       20,
       20,
@@ -503,7 +509,7 @@ export class AppComponent {
     );
 
     pdf.setFontSize(
-      9.5
+      10.5
     );
 
     pdf.text(
@@ -515,22 +521,26 @@ export class AppComponent {
       }
     );
 
-    pdf.setFont(
-      'helvetica',
-      'normal'
-    );
-
-    pdf.setFontSize(
-      8
-    );
-
     const left =
       x + 3;
 
     const right =
       x + width - 4;
 
+    // Tamanho padrão dos rótulos
+    pdf.setFont(
+      'helvetica',
+      'normal'
+    );
+
+    pdf.setFontSize(
+      9.2
+    );
+
+    // ==========================
     // NOME
+    // ==========================
+
     pdf.text(
       'NOME:',
       left,
@@ -538,13 +548,16 @@ export class AppComponent {
     );
 
     pdf.line(
-      left + 12,
+      left + 13,
       y + 15.7,
       right,
       y + 15.7
     );
 
+    // ==========================
     // LIVRO
+    // ==========================
+
     pdf.text(
       'LIVRO:',
       left,
@@ -552,7 +565,7 @@ export class AppComponent {
     );
 
     pdf.line(
-      left + 12,
+      left + 13,
       y + 22.7,
       right,
       y + 22.7
@@ -563,16 +576,27 @@ export class AppComponent {
       'bold'
     );
 
+    pdf.setFontSize(
+      10.7
+    );
+
     pdf.text(
       this.book,
-      left + 14,
+      left + 15,
       y + 22
     );
 
+    // ==========================
     // CAPÍTULO
+    // ==========================
+
     pdf.setFont(
       'helvetica',
       'normal'
+    );
+
+    pdf.setFontSize(
+      9.2
     );
 
     pdf.text(
@@ -582,39 +606,50 @@ export class AppComponent {
     );
 
     pdf.line(
-      left + 18,
+      left + 20,
       y + 29.7,
-      left + 34,
+      left + 35,
       y + 29.7
     );
 
     pdf.setFont(
       'helvetica',
       'bold'
+    );
+
+    pdf.setFontSize(
+      10.7
     );
 
     pdf.text(
       String(this.chapter),
-      left + 20,
+      left + 23,
       y + 29
     );
 
+    // ==========================
     // VERSOS
+    // ==========================
+
     pdf.setFont(
       'helvetica',
       'normal'
     );
 
+    pdf.setFontSize(
+      9.2
+    );
+
     pdf.text(
       'VERSOS:',
-      left + 35,
+      left + 37,
       y + 29
     );
 
     pdf.line(
-      left + 50,
+      left + 53,
       y + 29.7,
-      left + 67,
+      left + 68,
       y + 29.7
     );
 
@@ -623,26 +658,37 @@ export class AppComponent {
       'bold'
     );
 
+    pdf.setFontSize(
+      10.7
+    );
+
     pdf.text(
       String(verse.number),
-      left + 52,
+      left + 56,
       y + 29
     );
 
+    // ==========================
     // AO
+    // ==========================
+
     pdf.setFont(
       'helvetica',
       'normal'
     );
 
+    pdf.setFontSize(
+      9.2
+    );
+
     pdf.text(
       'AO',
-      left + 68,
+      left + 70,
       y + 29
     );
 
     pdf.line(
-      left + 74,
+      left + 77,
       y + 29.7,
       right,
       y + 29.7
@@ -653,16 +699,27 @@ export class AppComponent {
       'bold'
     );
 
+    pdf.setFontSize(
+      10.7
+    );
+
     pdf.text(
       String(verse.number),
-      left + 76,
+      left + 80,
       y + 29
     );
 
+    // ==========================
     // APÓS
+    // ==========================
+
     pdf.setFont(
       'helvetica',
       'normal'
+    );
+
+    pdf.setFontSize(
+      9.2
     );
 
     pdf.text(
@@ -672,13 +729,25 @@ export class AppComponent {
     );
 
     pdf.line(
-      left + 12,
+      left + 13,
       y + 36.7,
       right,
       y + 36.7
     );
 
+    // ==========================
     // DATA
+    // ==========================
+
+    pdf.setFont(
+      'helvetica',
+      'normal'
+    );
+
+    pdf.setFontSize(
+      9.2
+    );
+
     pdf.text(
       'RECITATIVO PARA O DIA:',
       left,
@@ -686,7 +755,7 @@ export class AppComponent {
     );
 
     pdf.line(
-      left + 43,
+      left + 46,
       y + 43.7,
       right,
       y + 43.7
@@ -697,18 +766,29 @@ export class AppComponent {
       'bold'
     );
 
+    pdf.setFontSize(
+      10.3
+    );
+
     pdf.text(
       this.formatDate(
         this.recitativeDate
       ),
-      left + 46,
+      left + 48,
       y + 43
     );
 
+    // ==========================
     // AUXILIAR
+    // ==========================
+
     pdf.setFont(
       'helvetica',
       'normal'
+    );
+
+    pdf.setFontSize(
+      9.2
     );
 
     pdf.text(
@@ -718,7 +798,7 @@ export class AppComponent {
     );
 
     pdf.line(
-      left + 17,
+      left + 19,
       y + 50.7,
       right,
       y + 50.7
@@ -729,9 +809,13 @@ export class AppComponent {
       'bold'
     );
 
+    pdf.setFontSize(
+      10.7
+    );
+
     pdf.text(
       this.assistant,
-      left + 19,
+      left + 21,
       y + 50
     );
   }
@@ -891,7 +975,25 @@ export class AppComponent {
     ] =
       value.split('-');
 
-    return `${day}/${month}/${year}`;
+    const meses = [
+      'janeiro',
+      'fevereiro',
+      'março',
+      'abril',
+      'maio',
+      'junho',
+      'julho',
+      'agosto',
+      'setembro',
+      'outubro',
+      'novembro',
+      'dezembro'
+    ];
+
+    const nomeMes =
+      meses[Number(month) - 1];
+
+    return `${Number(day)} de ${nomeMes} de ${year}`;
   }
 
   private fileName(
