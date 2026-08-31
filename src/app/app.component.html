@@ -1,7 +1,9 @@
 <header class="hero">
   <div>
     <span class="eyebrow">GERADOR DE CARTÕES</span>
+
     <h1>Recitativo</h1>
+
     <p>
       Separe os versículos e gere as frentes e os versos prontos para impressão manual.
     </p>
@@ -23,13 +25,17 @@
 
       <div>
         <h2>Dados do recitativo</h2>
-        <p>Preencha os dados que aparecerão em todos os cartões.</p>
+
+        <p>
+          Preencha os dados que aparecerão em todos os cartões.
+        </p>
       </div>
     </div>
 
     <div class="grid">
 
       <!-- LIVRO -->
+
       <label>
         <span>Livro</span>
 
@@ -46,7 +52,9 @@
         </select>
       </label>
 
+
       <!-- CAPÍTULO -->
+
       <label>
         <span>Capítulo</span>
 
@@ -57,7 +65,37 @@
         >
       </label>
 
+
+      <!-- CONJUNTO -->
+
+      <label>
+        <span>Conjunto</span>
+
+        <select
+          [(ngModel)]="conjunto"
+          (ngModelChange)="alterarConjunto()"
+        >
+          <option [ngValue]="1">
+            1º conjunto — mesmo verso para todos
+          </option>
+
+          <option [ngValue]="2">
+            2º conjunto
+          </option>
+
+          <option [ngValue]="3">
+            3º conjunto
+          </option>
+
+          <option [ngValue]="4">
+            4º conjunto
+          </option>
+        </select>
+      </label>
+
+
       <!-- DATA -->
+
       <label>
         <span>Data do recitativo</span>
 
@@ -67,7 +105,9 @@
         >
       </label>
 
+
       <!-- AUXILIAR -->
+
       <label>
         <span>Auxiliar</span>
 
@@ -79,7 +119,9 @@
 
     </div>
 
+
     <!-- BUSCAR -->
+
     <button
       class="primary"
       type="button"
@@ -88,6 +130,80 @@
     >
       {{ loadingChapter() ? 'Buscando...' : 'Buscar capítulo' }}
     </button>
+
+  </section>
+
+
+  <!-- ================================= -->
+  <!-- CONFIGURAÇÃO DO PRIMEIRO CONJUNTO -->
+  <!-- ================================= -->
+
+  <section
+    class="panel"
+    *ngIf="conjunto === 1 && verses().length"
+  >
+
+    <div class="section-title">
+      <span>✦</span>
+
+      <div>
+        <h2>1º conjunto</h2>
+
+        <p>
+          Escolha o versículo que será usado para todas as crianças
+          e informe quantos cartões deseja imprimir.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <!-- VERSÍCULO -->
+
+      <label>
+        <span>Versículo para repetir</span>
+
+        <select
+          [(ngModel)]="versoPrimeiroConjunto"
+          (ngModelChange)="toggleVerse($event)"
+        >
+          <option
+            *ngFor="let verse of verses()"
+            [ngValue]="verse.number"
+          >
+            Versículo {{ verse.number }}
+          </option>
+        </select>
+      </label>
+
+
+      <!-- QUANTIDADE -->
+
+      <label>
+        <span>Quantidade de cartões</span>
+
+        <input
+          type="number"
+          min="1"
+          [(ngModel)]="quantidadePrimeiroConjunto"
+        >
+      </label>
+
+    </div>
+
+    <div class="tip">
+
+      <strong>
+        Mesmo versículo para todos
+      </strong>
+
+      <p>
+        O cartão do versículo escolhido será repetido
+        {{ quantidadePrimeiroConjunto || 0 }}
+        vez(es) no PDF.
+      </p>
+
+    </div>
 
   </section>
 
@@ -102,15 +218,30 @@
       <span>02</span>
 
       <div>
+
         <h2>Conferência</h2>
-        <p>Selecione os versículos e corrija o texto antes de gerar.</p>
+
+        <p *ngIf="conjunto !== 1">
+          Selecione os versículos e corrija o texto antes de gerar.
+        </p>
+
+        <p *ngIf="conjunto === 1">
+          Confira o versículo escolhido e corrija o texto antes de gerar.
+        </p>
+
       </div>
     </div>
 
+
+    <!-- ============================== -->
+    <!-- TOOLBAR DOS OUTROS CONJUNTOS -->
+    <!-- ============================== -->
+
     <div
       class="toolbar"
-      *ngIf="verses().length"
+      *ngIf="verses().length && conjunto !== 1"
     >
+
       <strong>
         {{ selectedVerses().length }}
         de
@@ -119,6 +250,7 @@
       </strong>
 
       <div>
+
         <button
           class="ghost"
           type="button"
@@ -134,21 +266,57 @@
         >
           Desmarcar
         </button>
+
       </div>
+
     </div>
 
-    <!-- LISTA DE VERSÍCULOS -->
+
+    <!-- =========================== -->
+    <!-- TOOLBAR DO PRIMEIRO CONJUNTO -->
+    <!-- =========================== -->
+
+    <div
+      class="toolbar"
+      *ngIf="verses().length && conjunto === 1"
+    >
+
+      <strong *ngIf="versoPrimeiroConjunto !== null">
+        Versículo {{ versoPrimeiroConjunto }} selecionado
+      </strong>
+
+      <strong *ngIf="versoPrimeiroConjunto === null">
+        Nenhum versículo selecionado
+      </strong>
+
+      <div>
+        {{ quantidadePrimeiroConjunto || 0 }}
+        cartão(ões)
+      </div>
+
+    </div>
+
+
+    <!-- ================================== -->
+    <!-- LISTA - OUTROS CONJUNTOS -->
+    <!-- ================================== -->
 
     <div
       class="verse-list"
-      *ngIf="verses().length; else emptyState"
+      *ngIf="
+        verses().length &&
+        conjunto !== 1
+      "
     >
+
       <article
         class="verse-item"
         *ngFor="let verse of verses()"
         [class.disabled]="!verse.selected"
       >
+
         <label class="check">
+
           <input
             type="checkbox"
             [checked]="verse.selected"
@@ -158,6 +326,7 @@
           <span>
             {{ verse.number }}
           </span>
+
         </label>
 
         <textarea
@@ -165,16 +334,72 @@
           [ngModel]="verse.text"
           (ngModelChange)="updateVerseText(verse.number, $event)"
         ></textarea>
+
       </article>
+
     </div>
 
-    <!-- QUANDO AINDA NÃO BUSCOU -->
 
-    <ng-template #emptyState>
-      <div class="empty">
-        Os versículos separados aparecerão aqui.
-      </div>
-    </ng-template>
+    <!-- ================================== -->
+    <!-- LISTA - PRIMEIRO CONJUNTO -->
+    <!-- ================================== -->
+
+    <div
+      class="verse-list"
+      *ngIf="
+        verses().length &&
+        conjunto === 1
+      "
+    >
+
+      <article
+        class="verse-item"
+        *ngFor="let verse of verses()"
+        [class.disabled]="!verse.selected"
+      >
+
+        <label class="check">
+
+          <!--
+            RADIO no primeiro conjunto:
+            visualmente deixa claro que
+            somente UM versículo pode ser escolhido.
+          -->
+
+          <input
+            type="radio"
+            name="versoPrimeiroConjunto"
+            [checked]="verse.number === versoPrimeiroConjunto"
+            (change)="toggleVerse(verse.number)"
+          >
+
+          <span>
+            {{ verse.number }}
+          </span>
+
+        </label>
+
+        <textarea
+          rows="3"
+          [ngModel]="verse.text"
+          (ngModelChange)="updateVerseText(verse.number, $event)"
+        ></textarea>
+
+      </article>
+
+    </div>
+
+
+    <!-- ======================== -->
+    <!-- QUANDO AINDA NÃO BUSCOU -->
+    <!-- ======================== -->
+
+    <div
+      class="empty"
+      *ngIf="!verses().length"
+    >
+      Os versículos separados aparecerão aqui.
+    </div>
 
   </section>
 
@@ -186,23 +411,34 @@
   <section class="panel output-panel">
 
     <div class="section-title">
+
       <span>03</span>
 
       <div>
+
         <h2>Impressão</h2>
 
         <p>
           Escolha como o verso será reposicionado quando a folha for virada.
         </p>
+
       </div>
+
     </div>
+
 
     <div class="print-options">
 
       <label>
-        <span>Posição dos versos</span>
 
-        <select [(ngModel)]="backMode">
+        <span>
+          Posição dos versos
+        </span>
+
+        <select
+          [(ngModel)]="backMode"
+        >
+
           <option value="mirror-horizontal">
             Espelhar horizontalmente
           </option>
@@ -218,10 +454,14 @@
           <option value="same">
             Manter as mesmas posições
           </option>
+
         </select>
+
       </label>
 
+
       <div class="tip">
+
         <strong>
           Dica para impressoras sem frente e verso
         </strong>
@@ -231,11 +471,15 @@
           e depois imprima o arquivo de versos. Faça um teste com uma
           folha antes.
         </p>
+
       </div>
 
     </div>
 
+
+    <!-- ========== -->
     <!-- BOTÕES PDF -->
+    <!-- ========== -->
 
     <div class="actions">
 
@@ -265,7 +509,10 @@
 
     </div>
 
+
+    <!-- ==== -->
     <!-- ERRO -->
+    <!-- ==== -->
 
     <p
       class="error"
@@ -277,6 +524,7 @@
   </section>
 
 </main>
+
 
 <footer>
   Folha A4 • 10 cartões por página • cartão de 105 × 59,4 mm

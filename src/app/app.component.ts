@@ -42,6 +42,26 @@ export class AppComponent {
   recitativeDate = '';
   assistant = '';
 
+  /*
+   * CONJUNTO
+   *
+   * 1 = mesmo versículo para todas as crianças
+   * 2, 3 e 4 = funcionamento normal
+   */
+  conjunto = 4;
+
+  /*
+   * Quantidade de cartões que serão gerados
+   * quando o 1º conjunto estiver selecionado.
+   */
+  quantidadePrimeiroConjunto = 10;
+
+  /*
+   * Versículo escolhido para ser repetido
+   * no 1º conjunto.
+   */
+  versoPrimeiroConjunto: number | null = null;
+
   backMode: BackMode = 'mirror-horizontal';
 
   verses = signal<Verse[]>([]);
@@ -73,6 +93,7 @@ export class AppComponent {
       this.books.set(data.livros ?? []);
 
       if (this.books().length > 0) {
+
         const salmos = this.books().find(
           (item) => item.code === 'sal'
         );
@@ -86,6 +107,7 @@ export class AppComponent {
       }
 
     } catch (error) {
+
       console.error(
         'Erro ao carregar livros:',
         error
@@ -96,7 +118,9 @@ export class AppComponent {
       );
 
     } finally {
+
       this.loadingBooks.set(false);
+
     }
   }
 
@@ -120,6 +144,7 @@ export class AppComponent {
     this.loadingChapter.set(true);
 
     try {
+
       const url =
         `https://recitativo-ccb-api.vercel.app/api/biblia` +
         `?livro=${this.selectedBookCode}` +
@@ -128,6 +153,7 @@ export class AppComponent {
       const response = await fetch(url);
 
       if (!response.ok) {
+
         if (response.status === 404) {
           this.error.set(
             'Capítulo não encontrado.'
@@ -146,9 +172,11 @@ export class AppComponent {
         !data.versos ||
         data.versos.length === 0
       ) {
+
         this.error.set(
           'Nenhum versículo encontrado.'
         );
+
         return;
       }
 
@@ -162,7 +190,7 @@ export class AppComponent {
           ) => ({
             number: Number(verse.number),
             text: verse.text,
-            selected: true
+            selected: this.conjunto !== 1
           })
         );
 
@@ -177,9 +205,25 @@ export class AppComponent {
         this.book = selectedBook.name;
       }
 
+      /*
+       * No 1º conjunto escolhemos automaticamente
+       * o primeiro versículo inicialmente.
+       */
+      if (
+        this.conjunto === 1 &&
+        versos.length > 0
+      ) {
+
+        this.versoPrimeiroConjunto =
+          versos[0].number;
+
+        versos[0].selected = true;
+      }
+
       this.verses.set(versos);
 
     } catch (error) {
+
       console.error(
         'Erro ao buscar capítulo:',
         error
@@ -190,17 +234,99 @@ export class AppComponent {
       );
 
     } finally {
+
       this.loadingChapter.set(false);
+
+    }
+  }
+
+  /*
+   * Chamado quando o usuário muda
+   * o conjunto na interface.
+   */
+  alterarConjunto(): void {
+    this.error.set('');
+
+    /*
+     * Se ainda não carregou capítulo,
+     * apenas guardamos a opção.
+     */
+    if (this.verses().length === 0) {
+      this.versoPrimeiroConjunto = null;
+      return;
+    }
+
+    if (this.conjunto === 1) {
+
+      const primeiroVerso =
+        this.verses()[0];
+
+      this.versoPrimeiroConjunto =
+        primeiroVerso?.number ?? null;
+
+      /*
+       * Somente um versículo pode ficar
+       * selecionado no 1º conjunto.
+       */
+      this.verses.update((items) =>
+        items.map((item) => ({
+          ...item,
+          selected:
+            item.number ===
+            this.versoPrimeiroConjunto
+        }))
+      );
+
+    } else {
+
+      /*
+       * Voltando para 2º, 3º ou 4º,
+       * todos ficam selecionados novamente.
+       */
+      this.versoPrimeiroConjunto = null;
+
+      this.verses.update((items) =>
+        items.map((item) => ({
+          ...item,
+          selected: true
+        }))
+      );
     }
   }
 
   toggleVerse(number: number): void {
+
+    /*
+     * No 1º conjunto, clicar em outro verso
+     * troca a seleção. Nunca permite vários.
+     */
+    if (this.conjunto === 1) {
+
+      this.versoPrimeiroConjunto =
+        number;
+
+      this.verses.update((items) =>
+        items.map((item) => ({
+          ...item,
+          selected:
+            item.number === number
+        }))
+      );
+
+      return;
+    }
+
+    /*
+     * Outros conjuntos:
+     * comportamento normal.
+     */
     this.verses.update((items) =>
       items.map((item) =>
         item.number === number
           ? {
               ...item,
-              selected: !item.selected
+              selected:
+                !item.selected
             }
           : item
       )
@@ -208,6 +334,50 @@ export class AppComponent {
   }
 
   selectAll(value: boolean): void {
+
+    /*
+     * No primeiro conjunto não faz sentido
+     * marcar todos.
+     */
+    if (this.conjunto === 1) {
+
+      if (!value) {
+
+        this.versoPrimeiroConjunto =
+          null;
+
+        this.verses.update((items) =>
+          items.map((item) => ({
+            ...item,
+            selected: false
+          }))
+        );
+
+        return;
+      }
+
+      const primeiro =
+        this.verses()[0];
+
+      if (!primeiro) {
+        return;
+      }
+
+      this.versoPrimeiroConjunto =
+        primeiro.number;
+
+      this.verses.update((items) =>
+        items.map((item) => ({
+          ...item,
+          selected:
+            item.number ===
+            primeiro.number
+        }))
+      );
+
+      return;
+    }
+
     this.verses.update((items) =>
       items.map((item) => ({
         ...item,
@@ -220,6 +390,7 @@ export class AppComponent {
     number: number,
     text: string
   ): void {
+
     this.verses.update((items) =>
       items.map((item) =>
         item.number === number
@@ -232,12 +403,60 @@ export class AppComponent {
     );
   }
 
+  /*
+   * Lista real de cartões que serão
+   * enviados para o PDF.
+   *
+   * Nos outros conjuntos:
+   * um cartão por versículo selecionado.
+   *
+   * No primeiro:
+   * repete o mesmo versículo várias vezes.
+   */
+  private versesForPdf(): Verse[] {
+
+    if (this.conjunto !== 1) {
+      return this.selectedVerses();
+    }
+
+    if (
+      this.versoPrimeiroConjunto === null ||
+      this.quantidadePrimeiroConjunto < 1
+    ) {
+      return [];
+    }
+
+    const verse =
+      this.verses().find(
+        (item) =>
+          item.number ===
+          this.versoPrimeiroConjunto
+      );
+
+    if (!verse) {
+      return [];
+    }
+
+    return Array.from(
+      {
+        length:
+          this.quantidadePrimeiroConjunto
+      },
+      () => ({
+        ...verse,
+        selected: true
+      })
+    );
+  }
+
   generateFrontPdf(): void {
+
     if (!this.validate()) {
       return;
     }
 
-    const pdf = this.createPdf();
+    const pdf =
+      this.createPdf();
 
     this.drawPages(
       pdf,
@@ -250,11 +469,13 @@ export class AppComponent {
   }
 
   generateBackPdf(): void {
+
     if (!this.validate()) {
       return;
     }
 
-    const pdf = this.createPdf();
+    const pdf =
+      this.createPdf();
 
     this.drawPages(
       pdf,
@@ -267,11 +488,13 @@ export class AppComponent {
   }
 
   generateCompletePdf(): void {
+
     if (!this.validate()) {
       return;
     }
 
-    const pdf = this.createPdf();
+    const pdf =
+      this.createPdf();
 
     this.drawPages(
       pdf,
@@ -292,6 +515,7 @@ export class AppComponent {
   }
 
   private validate(): boolean {
+
     this.error.set('');
 
     if (
@@ -300,6 +524,7 @@ export class AppComponent {
       !this.recitativeDate ||
       !this.assistant.trim()
     ) {
+
       this.error.set(
         'Preencha livro, capítulo, data e auxiliar.'
       );
@@ -307,9 +532,44 @@ export class AppComponent {
       return false;
     }
 
+    /*
+     * Validação específica do 1º conjunto.
+     */
+    if (this.conjunto === 1) {
+
+      if (
+        this.versoPrimeiroConjunto === null
+      ) {
+
+        this.error.set(
+          'Escolha o versículo do 1º conjunto.'
+        );
+
+        return false;
+      }
+
+      if (
+        !this.quantidadePrimeiroConjunto ||
+        this.quantidadePrimeiroConjunto < 1
+      ) {
+
+        this.error.set(
+          'Informe quantos cartões devem ser gerados para o 1º conjunto.'
+        );
+
+        return false;
+      }
+
+      return true;
+    }
+
+    /*
+     * Validação normal dos demais conjuntos.
+     */
     if (
       this.selectedVerses().length === 0
     ) {
+
       this.error.set(
         'Selecione pelo menos um versículo.'
       );
@@ -321,6 +581,7 @@ export class AppComponent {
   }
 
   private createPdf(): jsPDF {
+
     return new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -334,14 +595,22 @@ export class AppComponent {
     keepFirstPage = true
   ): void {
 
+    /*
+     * IMPORTANTE:
+     * Agora usamos versesForPdf().
+     *
+     * É ela que faz o 1º conjunto
+     * repetir o cartão.
+     */
     const items =
-      this.selectedVerses();
+      this.versesForPdf();
 
     const perPage = 10;
 
     const totalPages =
       Math.ceil(
-        items.length / perPage
+        items.length /
+        perPage
       );
 
     for (
@@ -349,10 +618,12 @@ export class AppComponent {
       pageIndex < totalPages;
       pageIndex++
     ) {
+
       if (
         pageIndex > 0 ||
         !keepFirstPage
       ) {
+
         pdf.addPage();
       }
 
@@ -373,14 +644,19 @@ export class AppComponent {
           const { x, y } =
             this.positionFor(position);
 
-          if (side === 'front') {
+          if (
+            side === 'front'
+          ) {
+
             this.drawFront(
               pdf,
               x,
               y,
               verse
             );
+
           } else {
+
             this.drawBack(
               pdf,
               x,
@@ -407,7 +683,9 @@ export class AppComponent {
       index % 2;
 
     const row =
-      Math.floor(index / 2);
+      Math.floor(
+        index / 2
+      );
 
     return {
       x:
@@ -425,32 +703,40 @@ export class AppComponent {
   ): number {
 
     const row =
-      Math.floor(index / 2);
+      Math.floor(
+        index / 2
+      );
 
     const column =
       index % 2;
 
-    switch (this.backMode) {
+    switch (
+      this.backMode
+    ) {
 
       case 'mirror-horizontal':
+
         return (
           row * 2 +
           (1 - column)
         );
 
       case 'mirror-vertical':
+
         return (
           (4 - row) * 2 +
           column
         );
 
       case 'rotate-180':
+
         return (
           (4 - row) * 2 +
           (1 - column)
         );
 
       case 'same':
+
         return index;
     }
   }
@@ -527,7 +813,7 @@ export class AppComponent {
     const right =
       x + width - 4;
 
-    // Tamanho padrão dos rótulos
+    // Tamanho padrão
     pdf.setFont(
       'helvetica',
       'normal'
@@ -622,7 +908,9 @@ export class AppComponent {
     );
 
     pdf.text(
-      String(this.chapter),
+      String(
+        this.chapter
+      ),
       left + 23,
       y + 29
     );
@@ -663,7 +951,9 @@ export class AppComponent {
     );
 
     pdf.text(
-      String(verse.number),
+      String(
+        verse.number
+      ),
       left + 56,
       y + 29
     );
@@ -704,7 +994,9 @@ export class AppComponent {
     );
 
     pdf.text(
-      String(verse.number),
+      String(
+        verse.number
+      ),
       left + 80,
       y + 29
     );
@@ -820,163 +1112,161 @@ export class AppComponent {
     );
   }
 
- private drawBack(
-  pdf: jsPDF,
-  x: number,
-  y: number,
-  verse: Verse
-): void {
+  private drawBack(
+    pdf: jsPDF,
+    x: number,
+    y: number,
+    verse: Verse
+  ): void {
 
-  const width = 105;
-  const height = 59.4;
+    const width = 105;
+    const height = 59.4;
 
-  // ==========================
-  // LINHAS DE DIVISÃO / CORTE
-  // ==========================
+    // ==========================
+    // LINHAS DE DIVISÃO / CORTE
+    // ==========================
 
-  pdf.setDrawColor(
-    210,
-    210,
-    210
-  );
+    pdf.setDrawColor(
+      210,
+      210,
+      210
+    );
 
-  pdf.setLineWidth(0.3);
+    pdf.setLineWidth(
+      0.3
+    );
 
-  pdf.line(
-    x + width,
-    y,
-    x + width,
-    y + height
-  );
+    pdf.line(
+      x + width,
+      y,
+      x + width,
+      y + height
+    );
 
-  pdf.line(
-    x,
-    y + height,
-    x + width,
-    y + height
-  );
+    pdf.line(
+      x,
+      y + height,
+      x + width,
+      y + height
+    );
 
-  // ==========================
-  // REFERÊNCIA
-  // ==========================
+    // ==========================
+    // REFERÊNCIA
+    // ==========================
 
-  pdf.setTextColor(
-    20,
-    20,
-    20
-  );
+    pdf.setTextColor(
+      20,
+      20,
+      20
+    );
 
-  pdf.setFont(
-    'helvetica',
-    'bold'
-  );
+    pdf.setFont(
+      'helvetica',
+      'bold'
+    );
 
-  pdf.setFontSize(11);
+    pdf.setFontSize(
+      11
+    );
 
-  pdf.text(
-    `${this.book.toUpperCase()} ${this.chapter}:${verse.number}`,
-    x + width / 2,
-    y + 8,
-    {
-      align: 'center'
-    }
-  );
+    pdf.text(
+      `${this.book.toUpperCase()} ${this.chapter}:${verse.number}`,
+      x + width / 2,
+      y + 8,
+      {
+        align: 'center'
+      }
+    );
 
-  // ==========================
-  // TEXTO DO VERSÍCULO
-  // ==========================
+    // ==========================
+    // TEXTO DO VERSÍCULO
+    // ==========================
 
-  pdf.setFont(
-    'times',
-    'normal'
-  );
+    pdf.setFont(
+      'times',
+      'normal'
+    );
 
-  pdf.setTextColor(
-    20,
-    20,
-    20
-  );
+    pdf.setTextColor(
+      20,
+      20,
+      20
+    );
 
-  const availableWidth =
-    width - 14;
+    const availableWidth =
+      width - 14;
 
-  /*
-   * Fonte dinâmica.
-   *
-   * Versículos pequenos ficam GRANDES.
-   * Conforme o texto aumenta, a fonte diminui
-   * para continuar cabendo no cartão.
-   */
-  const fontSize =
-    verse.text.length > 400
-      ? 8
-      : verse.text.length > 320
-        ? 9
-        : verse.text.length > 250
-          ? 10
-          : verse.text.length > 180
-            ? 11
-            : verse.text.length > 120
-              ? 12
-              : verse.text.length > 70
-                ? 13
-                : 14;
+    const fontSize =
+      verse.text.length > 400
+        ? 8
+        : verse.text.length > 320
+          ? 9
+          : verse.text.length > 250
+            ? 10
+            : verse.text.length > 180
+              ? 11
+              : verse.text.length > 120
+                ? 12
+                : verse.text.length > 70
+                  ? 13
+                  : 14;
 
-  pdf.setFontSize(
-    fontSize
-  );
+    pdf.setFontSize(
+      fontSize
+    );
 
-  const lines =
-    pdf.splitTextToSize(
-      verse.text,
-      availableWidth
-    ) as string[];
+    const lines =
+      pdf.splitTextToSize(
+        verse.text,
+        availableWidth
+      ) as string[];
 
-  const lineHeight =
-    fontSize * 0.42;
+    const lineHeight =
+      fontSize *
+      0.42;
 
-  const blockHeight =
-    lines.length *
-    lineHeight;
+    const blockHeight =
+      lines.length *
+      lineHeight;
 
-  // Espaço reservado abaixo do título
-  const contentTop =
-    y + 14;
+    const contentTop =
+      y + 14;
 
-  const contentBottom =
-    y + height - 5;
+    const contentBottom =
+      y + height - 5;
 
-  const availableHeight =
-    contentBottom -
-    contentTop;
-
-  // Centraliza verticalmente o versículo
-  let startY =
-    contentTop +
-    (
-      availableHeight -
-      blockHeight
-    ) / 2;
-
-  if (
-    startY <
-    contentTop
-  ) {
-    startY =
+    const availableHeight =
+      contentBottom -
       contentTop;
+
+    let startY =
+      contentTop +
+      (
+        availableHeight -
+        blockHeight
+      ) / 2;
+
+    if (
+      startY <
+      contentTop
+    ) {
+
+      startY =
+        contentTop;
+    }
+
+    pdf.text(
+      lines,
+      x + width / 2,
+      startY,
+      {
+        align: 'center',
+        lineHeightFactor: 1.25,
+        maxWidth: availableWidth
+      }
+    );
   }
 
-  pdf.text(
-    lines,
-    x + width / 2,
-    startY,
-    {
-      align: 'center',
-      lineHeightFactor: 1.25,
-      maxWidth: availableWidth
-    }
-  );
-}
   private formatDate(
     value: string
   ): string {
@@ -1008,9 +1298,15 @@ export class AppComponent {
     ];
 
     const nomeMes =
-      meses[Number(month) - 1];
+      meses[
+        Number(month) - 1
+      ];
 
-    return `${Number(day)} de ${nomeMes} de ${year}`;
+    return (
+      `${Number(day)} de ` +
+      `${nomeMes} de ` +
+      `${year}`
+    );
   }
 
   private fileName(
@@ -1026,6 +1322,16 @@ export class AppComponent {
           '-'
         );
 
-    return `recitativo-${safeBook}-${this.chapter}-${suffix}.pdf`;
+    const conjuntoSuffix =
+      this.conjunto === 1
+        ? '-1-conjunto'
+        : '';
+
+    return (
+      `recitativo-${safeBook}-` +
+      `${this.chapter}` +
+      `${conjuntoSuffix}-` +
+      `${suffix}.pdf`
+    );
   }
 }
