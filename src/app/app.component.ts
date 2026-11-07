@@ -81,7 +81,7 @@ export class AppComponent {
 
     try {
       const response = await fetch(
-        'https://recitativo-ccb-api.vercel.app/api/biblia?acao=livros'
+        'https://recitativo-ccb-api-novo.vercel.app/api/biblia?acao=livros'
       );
 
       if (!response.ok) {
@@ -146,7 +146,7 @@ export class AppComponent {
     try {
 
       const url =
-        `https://recitativo-ccb-api.vercel.app/api/biblia` +
+        `https://recitativo-ccb-api-novo.vercel.app/api/biblia` +
         `?livro=${this.selectedBookCode}` +
         `&capitulo=${this.chapter}`;
 

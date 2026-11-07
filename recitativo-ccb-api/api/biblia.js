@@ -78,16 +78,18 @@ async function buscarCapitulo(livro, capitulo) {
       );
 
       const textoBruto =
-        $(elemento).attr('data-value') ?? '';
+      $(elemento).attr('data-value') ||
+      $(elemento).text();
 
-      const texto = cheerio
-        .load(`<div>${textoBruto}</div>`)
-        .text()
-        .replace(
-          /\s+-\s+[A-Za-zÀ-ÿ]+\.\s+\d+:\d+\s*$/,
-          ''
-        )
-        .trim();
+    const texto = cheerio
+    .load(`<div>${textoBruto}</div>`)
+    .text()
+    .replace(/^\s*\d+\s*/, '')
+    .replace(/Loading\.\.\./gi, '')
+    .replace(/\d+\s+palavras?\s+no\s+dicionário\s+para\s+este\s+versículo/gi, '')
+    .replace(/\s+-\s+[A-Za-zÀ-ÿ]+\.\s+\d+:\d+\s*$/, '')
+    .replace(/\s*\(\d+%\)/g, '')
+    .trim();
 
       if (numero > 0 && texto) {
         versos.push({
